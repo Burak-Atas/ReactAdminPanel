@@ -15,16 +15,17 @@ class VideoServices extends Component {
         });
     }
     getVideo(token){
-        return axios.get(this.url + "/video", {
+        return axios.get(this.url + "/videos", {
             headers: {
                 'ad': `${token}`
             }
         });
     }
-    delVideo(token){
-        return axios.delete(this.url + "/video", {
+    delVideo(token,name){
+        return axios.delete(this.url + "/delvideo", {
             headers: {
-                'token': `${token}`
+                'a': `${token}`,
+                "name":name,
             }
         });
     }

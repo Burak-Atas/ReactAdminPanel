@@ -1,30 +1,29 @@
 import axios from 'axios';
 import React, { Component } from 'react';
 
-class ProfileServices extends Component {
+class TaskListServices extends Component {
     constructor(props) {
         super(props);
         this.url = 'http://localhost:5000/teacher';
     }
 
-    Addprofile(formData, token) {
-        return axios.post(this.url + "/addprofile", formData, {
+    AddTask(formData, token) {
+        return axios.post(this.url + "/addtask", formData, {
             headers: {
                 'ad': `${token}`
             }
         });
     }
 
-    getprofile(token){
-        return axios.get(this.url + "/profile", {
+    getTask(token){
+        return axios.get(this.url + "/tasklist", {
             headers: {
                 'ad': `${token}`
             }
         });
     }
-    
-    delprofile(id, token) {
-        return axios.delete(this.url + "/delprofile", {
+    delTask(id, token) {
+        return axios.delete(this.url + "/deltask", {
           headers: {
             'ad': `${token}`, // Token bilgisini header'a ekle
             'task_id':id // Başlık bilgisini header'a ekle
@@ -34,4 +33,4 @@ class ProfileServices extends Component {
     
 }
 
-export default ProfileServices;
+export default TaskListServices;

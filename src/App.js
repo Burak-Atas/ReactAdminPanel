@@ -7,6 +7,8 @@ import User from './Pages/User';
 import Comminications from './Pages/Comminications';
 import Videos from './Pages/Videos';
 import Profile from './Pages/Profile';
+import Calendar from './Components/Calender';
+import MyCalenCdar from './Components/Calender';
 
 function App() {
   return (
@@ -25,10 +27,8 @@ function App() {
             <Route path='/Videos' element={<Videos />} />
             <Route path='/comminications' element={<Comminications />} />
 
+            <Route path='/calendar' element={<MyCalenCdar />} />
             <Route path='/profil' element={<Profile />} />
-
-
-
           </Routes>
         </div>
       </div>

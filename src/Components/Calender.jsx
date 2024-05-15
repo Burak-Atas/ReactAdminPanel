@@ -1,169 +1,143 @@
-import React, { useRef, useState } from "react";
+import React, { useState, useEffect } from "react";
+import Calendar from "react-calendar";
+import "react-calendar/dist/Calendar.css";
+import TaskListServices from "../Services/TaskList";
 
-export default function Calendar() {
-  const [formIsOpen, setFormOpen] = useState(false);
-  const [taskList, setTaskList] = useState([
-    {
-      title: "Burak Ataş ile Görüşme",
-      date: "15.05.2024",
-      time: "15.00",
-      content: "takitoskop egzersizi hakkın",
-    },
-  ]);
+function MyCalendar() {
+  const [date, setDate] = useState(new Date());
+  const [task, setTask] = useState("");
+  const [tasks, setTasks] = useState({});
 
-  const [formData, setFormData] = useState({
-    title: "",
-    date: "",
-    time: "",
-    content: "",
-  });
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
+  const onChange = (selectedDate) => {
+    setDate(selectedDate);
   };
 
-  const [isOpenTask,setOpenTask]= useState(false)
-
-  const handleContentButton = ()=>{
-setOpenTask(!isOpenTask)
-  }
-
-  const handleSaveButton = () => {
-    setFormOpen(!formIsOpen);
+  const handleTaskChange = (event) => {
+    setTask(event.target.value);
   };
 
-  const handleSubmit = () => {
-    const newMessage = {
-      title: formData.title,
-      content: formData.content,
-      sender_username: formData.user_name,
-      send_time: "Şimdi",
-      send_date: new Date().toLocaleDateString(),
-    };
+  const taskServices = new TaskListServices();
 
-    setFormData({
-      title: "",
-      date: "",
-      time: "",
-      content: "",
-    });
+  useEffect(() => {
+    taskServices
+      .getTask("")
+      .then((response) => {
+        if (response.status === 200) {
+          // Gruplanmış görevleri oluştur
+          const groupedTasks = {};
+          console.log(groupedTasks);
+          response.data.forEach((task) => {
+            const taskDate = task.date;
+            if (!groupedTasks[taskDate]) {
+              groupedTasks[taskDate] = [];
+            }
+            groupedTasks[taskDate].push(task);
+          });
+          setTasks(groupedTasks);
+        }
+      })
+      .catch((error) => {
+        console.error("Error fetching tasks:", error);
+      });
+  }, []);
+
+  const addTask = () => {
+    if (task === "") {
+      return;
+    }
+    const taskDate = date.toLocaleDateString();
+
+    taskServices
+      .AddTask({"content": task, "date": taskDate}, "")
+      .then((response) => {
+        const newTask = {"content": task, "id": response.data.id};
+        console.log(response.data.id)
+        const newTasks = { ...tasks };
+        if (!newTasks[taskDate]) {
+          newTasks[taskDate] = [];
+        }
+        newTasks[taskDate].push(newTask);
+        setTasks(newTasks);
+        setTask("");
+      })
+      .catch((error) => {
+        console.error("Error fetching users:", error);
+      });   
   };
+
+  const removeTask = (taskId) => {
+    const taskDate = date.toLocaleDateString();
+    const newTasks = { ...tasks };
+    console.log(taskId)
+    taskServices.delTask(taskId,"")
+      .then((response=>{
+        if(response.status===200){
+          newTasks[taskDate] = newTasks[taskDate].filter(task => task.task_id !== taskId);
+          setTasks(newTasks); // Silme başarılı olduğunda state'i güncelle
+        }
+      }))
+      .catch((error) => {
+        console.error("Error deleting task:", error);
+        // Hata durumunda gerekli işlemleri yapabilirsiniz, örneğin kullanıcıya bir bildirim göstermek
+      });
+  };
+  
 
   return (
-    <div>
-      {formIsOpen && (
-        <div className="fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 p-5">
-          <div className="absolute top-0 right-0 m-2">
-            <button
-              onClick={handleSaveButton}
-              className="bg-gray-400 hover:bg-gray-600 text-white font-bold py-1 px-2 rounded"
-            >
-              X
-            </button>
-          </div>
-          <div className="w-96 h-3/6 bg-slate-200 p-10">
-            <div className="mb-4">
-              <label
-                className="block text-gray-700 text-sm font-bold mb-2"
-                htmlFor="title"
-              >
-                Başlık
-              </label>
-              <input
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                id="title"
-                type="text"
-                placeholder="title"
-                name="title"
-                value={formData.title}
-                onChange={handleInputChange}
-              />
-            </div>
-            <div className="flex">
-              <div className="mb-4">
-                <label
-                  className="block text-gray-700 text-sm font-bold mb-2"
-                  htmlFor="date"
-                >
-                  Tarih
-                </label>
-                <input
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                  id="date"
-                  type="text"
-                  placeholder="Tarih"
-                  name="date"
-                  value={formData.date}
-                  onChange={handleInputChange}
-                />
-              </div>
-              <div className="mb-4">
-                <label
-                  className="block text-gray-700 text-sm font-bold mb-2"
-                  htmlFor="time"
-                >
-                  Saat
-                </label>
-                <input
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                  id="time"
-                  type="text"
-                  placeholder="Saat"
-                  name="time"
-                  value={formData.time}
-                  onChange={handleInputChange}
-                />
-              </div>
-            </div>
-            <textarea
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              rows="4"
-              placeholder="Mesaj İçeriği"
-              value={formData.content}
-              onChange={handleInputChange}
-              name="content"
-            ></textarea>
-            <button
-              onClick={handleSubmit}
-              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-            >
-              Kaydet
-            </button>
-          </div>
+    <div className="h-full w-full flex items-center justify-center bg-gray-100">
+      <div className="bg-white rounded-lg shadow-md p-8">
+        <h1 className="text-3xl font-bold text-center mb-6">
+          Günlük Görev Takibi
+        </h1>
+        <div className="flex justify-center mb-6">
+          <Calendar
+            onChange={onChange}
+            value={date}
+            className="w-80 h-80 border border-gray-300 rounded-lg shadow-md"
+          />
         </div>
-      )}
-      <div className="h-40 flex items-center">
-        <button
-          onClick={handleSaveButton}
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-        >
-          Görev Ekle
-        </button>
-      </div>
-      <div className="flex">
-        {taskList.map((value, index) => (
-          <div key={index} className="flex flex-col">
-            <button
-              onClick={handleContentButton}
-              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-            >
-              {value.title}
-            </button>
-            {isOpenTask&&(
-              <div>
-              <p>{value.content}</p>
-              <p>{value.time}</p>
-              <p>{value.date}</p>
-              </div>
-            )}
-            
-          </div>
-        ))}
+        <div className="flex items-center mb-4">
+          <input
+            type="text"
+            placeholder="Görevi girin"
+            value={task}
+            onChange={handleTaskChange}
+            className="flex-1 appearance-none border border-gray-300 rounded py-2 px-4 mr-2 focus:outline-none focus:border-blue-500"
+          />
+          <button
+            onClick={addTask}
+            className="py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:bg-blue-600"
+          >
+            Görev Ekle
+          </button>
+        </div>
+        <div className="mb-6 w-80">
+          <h2 className="text-xl font-bold mb-2">Görevler</h2>
+          <p className="mb-2">Seçili tarih: {date.toLocaleDateString()}</p>
+          {tasks[date.toLocaleDateString()] ? (
+            <ul className="h-16 scroll-y-auto">
+              {tasks[date.toLocaleDateString()].map((task) => (
+                <li
+                  key={task.id}
+                  className="border-b border-gray-300 py-2 flex justify-between items-center"
+                >
+                  <span>{task.content}</span>
+                  <button
+                    onClick={() => removeTask(task.task_id)}
+                    className="text-red-500 hover:text-red-700 focus:outline-none"
+                  >
+                    Sil
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="h-16 text-gray-500">Görev yok</p>
+          )}
+        </div>
       </div>
     </div>
   );
 }
+
+export default MyCalendar;

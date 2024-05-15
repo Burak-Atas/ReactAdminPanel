@@ -11,7 +11,7 @@ export default function Profile() {
   const pr = new ProfileServices();
 
   useEffect(() => {
-    pr.getProfileDetails("")
+    pr.getprofile("")
       .then((response) => {
         if (response.status === 200) {
         } else {
@@ -58,9 +58,7 @@ export default function Profile() {
           </div>
         </div>
       </div>
-      <div className="mt-8"> 
-        <Calendar />
-      </div>
+   
     </div>
   );
 }
