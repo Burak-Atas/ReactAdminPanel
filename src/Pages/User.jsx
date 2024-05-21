@@ -48,10 +48,20 @@ export default function User() {
 */
     const [users, setUsers] = useState([]);
 
-    const deleteUser = (index) => {
+    const deleteUser = (index,user_name) => {
         const newUsers = [...users];
-        newUsers.splice(index, 1);
-        setUsers(newUsers);
+        usr.delUser("",user_name)
+        .then((response=>{
+            if(response.status===200){
+
+            newUsers.splice(index, 1);
+            setUsers(newUsers);
+            }
+            console.log(response)
+        }))
+       .catch(err=>{
+        alert("işlem yapılırken hata oluştu"+err)
+       })
     };
 
     // Function to filter users based on score
@@ -253,7 +263,7 @@ export default function User() {
                         <div className='w-1/6'>{user.phone_number}</div>
                         <div className='w-1/6'>{user.password}</div>
                         <div className='w-1/6'>{user.level}</div>
-                        <button onClick={() => deleteUser(index)} className="ml-auto bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">
+                        <button onClick={() => deleteUser(index,user.user_name)} className="ml-auto bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">
                             Sil
                         </button>
                     </div>

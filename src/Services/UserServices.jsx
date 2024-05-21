@@ -21,10 +21,11 @@ class UserServices extends Component {
             }
         });
     }
-    delUser(token){
-        return axios.delete(this.url + "/user", {
+    delUser(token,user_name){
+        return axios.delete(this.url + "/deluser", {
             headers: {
-                'token': `${token}`
+                'ad': `${token}`,
+                'user_name':user_name,
             }
         });
     }

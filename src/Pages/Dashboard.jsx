@@ -47,8 +47,7 @@ const Dashboard = () => {
       .getUser()
       .then((response) => {
         if (response.status === 200) {
-          console.log(response.data);
-          setUser(response.data);
+          setUser(response.data.slice(0, 5)); // Corrected slice method
         }
       })
       .catch((error) => {
@@ -98,9 +97,9 @@ const Dashboard = () => {
                 ) : (
                   task.map((value, index) => {
                     return (
-                      <div key={index} className="mt-2 flex">
-                        <p className="w-2/6">{value.date}</p>
-                      <p className="w-4/6">{value.content}</p>
+                      <div key={index} className="w-full mt-2 flex">
+                        <p className="">{value.date}</p>
+                        <p className="ml-4">{value.content}</p>
                       </div>
                     );
                   })
@@ -121,9 +120,9 @@ const Dashboard = () => {
                     <div className='w-2/6 text-sky-500'>Puan</div>
                 </div>
               {user.length === 0 ? (
-                <div className="text-5052ff mt-4 text-center ">
+                <div className="text-5052ff mt-4 h-8  text-center ">
                   {" "}
-                  <p className="text-rose-500">Yaklaşan görev yok</p>
+                  <p className="text-rose-500">Kayıtlı Kullanıcı yok</p>
                 </div>
               ) : (
                 user.map((value, index) => {
