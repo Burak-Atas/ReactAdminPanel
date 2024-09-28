@@ -16,6 +16,8 @@ import PasswordChange from './Pages/PasswordChange';
 import StudentReport from './Pages/StudentReport';
 import Exercises from './Pages/Exercises';
 import Navbar from './Components/Navbar';
+import ExercisesLevel from './Pages/ExercisesLevel';
+import IsEqual from './Components/Exercises/IsEqual';
 
 function App() {
   const navigate = useNavigate();
@@ -51,6 +53,10 @@ function App() {
           <Route path="/education" element={<Educations />} />
           <Route path="/calendar" element={<Calendar />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/education/:id" element={<ExercisesLevel />} />
+          <Route path="/education/isequal" element={<IsEqual dayNumber={1} />} />
+
+
         </Routes>
       </div>
     </div>
