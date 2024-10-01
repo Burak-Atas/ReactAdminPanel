@@ -18,6 +18,7 @@ import Exercises from './Pages/Exercises';
 import Navbar from './Components/Navbar';
 import ExercisesLevel from './Pages/ExercisesLevel';
 import IsEqual from './Components/Exercises/IsEqual';
+import FastRead from './Components/Exercises/FastRead';
 
 function App() {
   const navigate = useNavigate();
@@ -54,7 +55,8 @@ function App() {
           <Route path="/calendar" element={<Calendar />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/education/:id" element={<ExercisesLevel />} />
-          <Route path="/education/isequal" element={<IsEqual dayNumber={1} />} />
+          <Route path="/education/:id/isequal" element={<IsEqual />} />
+          <Route path="/education/:id/fastread" element={<FastRead />} />
 
 
         </Routes>

@@ -24,10 +24,20 @@ export default function ExercisesLevel() {
 
   return (
     <div>
-      <ul>
-        {exercises.map((name, index) => (
-          <Link to={`/education/${name}`} key={index} className='block'>{name}</Link> // Her bir exercise name'i listele
-        ))}
+      <div className="h-32 flex items-center">
+        <h2 className="text-3xl font-semibold">{numericId}. Seviye  Egzersizleri </h2>
+      </div>
+      <ul className='flex items-center flex-wrap'>
+      {exercises.map((name, index) => (
+  <Link 
+    to={`/education/${numericId}/${name}`} 
+    key={index} 
+    className='w-44 h-16 flex items-center justify-center   border border-gray-300 m-2'
+  >
+    {name}
+  </Link>
+))}
+
       </ul>
     </div>
   );

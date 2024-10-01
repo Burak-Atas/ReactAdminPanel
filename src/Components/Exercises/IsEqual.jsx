@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { MdSportsScore } from 'react-icons/md'
 import { CircleCheck, CircleX, CircleCheckBig } from 'lucide-react'
 import CountdownAnimation from '../../animation/CountdownAnimation'
 import { playCorrectSound } from '../../effect/Correct'
@@ -7,7 +6,8 @@ import { playInCorrectSound } from '../../effect/Incorrect'
 import { playCongrulationSound } from '../../effect/Congrulation'
 import LoaderSimple from '../LoadPage/LoaderSimple'
 import FullscreenAlert from '../LoadPage/FullscreenAlert'
-import ExerciseServices from '../../Services/ExerciseServices'
+import VocabolaryServices from '../../Services/VocabolaryServices'
+import { useParams } from 'react-router-dom'
 
 const IsEqual = ({ dayNumber }) => {
   const exerciseName = 'isequal'
@@ -31,71 +31,72 @@ const IsEqual = ({ dayNumber }) => {
   const [isFirst, setIsFirst] = useState(true)
   const timerId = useRef(null)
 
+  const { id,exercise_name } = useParams(); // URL'den id parametresini al
+
+
+  const [vocabolary,setVocabolary] = useState({});
+
+
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const handleCategoryClick = (category) => {
+    // vocabolary dizisindeki sadece "hikaye" kategorisinde olanları filtreler
+    const filteredVocabolary = vocabolary.filter(item => item.category === category);
+  
+    if (filteredVocabolary.length > 0) {
+      setSelectedCategory(filteredVocabolary); // Kategori güncellenir
+      console.log(filteredVocabolary)
+
+    } else {
+      console.log("Hikaye kategorisinde bir sonuç bulunamadı.");
+    }
+  };
+
+  
+  const [selectedPr, setSelectedPr] = useState({"name": "", "text": "text", "speed": 0});
+
+const handleText = (name) => {
+  console.log(name)
+    const filteredVocabolary = vocabolary.find(item => item.name === name); // find ile ilk bulduğu elemanı alıyoruz
+    if (filteredVocabolary) {
+        setSelectedPr({
+            name: filteredVocabolary.name,
+            text: filteredVocabolary.text,
+            speed: selectedPr.speed // Mevcut hızı koruyun
+        });
+    }
+}
+
+const handleSpeed = (speed) => {
+    console.log(speed);
+    setSelectedPr((prev) => ({
+        ...prev, // Önceki durumu koru
+        speed: speed
+    }));
+}
+
+
   useEffect(() => {
     if (!token) {
       window.location.href = '/login'
     }
   }, [])
 
-  const exerciseService = new ExerciseServices()
-  const [isConfirmed, setIsConfirmed] = useState(false)
-
-  const handleConfirm = () => {
-    setIsConfirmed(true)
-  }
+  const vocabolaryservices = new VocabolaryServices()
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const data = {
-          day: dayNumber,
-          token: token,
-          exerciseName: exerciseName,
-        }
-
-        const response = await exerciseService.getExerciseData(data)
-
-        if (response.status === 200) {
-          // Gelen veri yapısına göre düzeltme
-          setProblems(
-            response.data[0].problems[dayNumber - 1].map((problem) => ({
-              ...problem,
-              used: false, // Her probleme used özelliğini ekleyin
-            }))
-          )
-          setIsLoading(false)
-        } else {
-          console.error(response.data)
-        }
-      } catch (error) {
-        console.error('İstek hatası:', error.response.data.error)
-      }
-    }
-
-    fetchData()
-  }, [dayNumber, token, exerciseName])
+   vocabolaryservices.getVocabolary()
+   .then((response)=>{
+      console.log(response.data)
+      setVocabolary(response.data)
+   })
+   .catch((error)=>{
+    
+   })
+  }, [])
 
   const exerciseOver = async () => {
-    try {
-      const data = {
-        token: token,
-        dayNumber: dayNumber,
-        name: exerciseName,
-        time: elapsedTime,
-        correct: correctNum,
-        incorrect: incorrectNum,
-      }
-      const response = await exerciseService.setExerciseOver(data)
-      if (response.status === 200) {
-        console.log(response.data)
-      } else {
-        console.error(response.data)
-      }
-    } catch (error) {
-      console.error('İstek hatası:', error.response.data.error)
-    }
+    
   }
-
   useEffect(() => {
     if (isFinish) {
       exerciseOver()
@@ -194,30 +195,7 @@ const IsEqual = ({ dayNumber }) => {
 
     // Yeni bir problem seti çekin
     const fetchData = async () => {
-      try {
-        const data = {
-          day: dayNumber,
-          token: token,
-          exerciseName: exerciseName,
-        }
 
-        const response = await exerciseService.getExerciseData(data)
-
-        if (response.status === 200) {
-          // Gelen veri yapısına göre düzeltme
-          setProblems(
-            response.data[0].problems[dayNumber - 1].map((problem) => ({
-              ...problem,
-              used: false, // Her probleme used özelliğini ekleyin
-            }))
-          )
-          setIsLoading(false)
-        } else {
-          console.error(response.data)
-        }
-      } catch (error) {
-        console.error('İstek hatası:', error.response.data.error)
-      }
     }
     fetchData()
   }
@@ -226,9 +204,6 @@ const IsEqual = ({ dayNumber }) => {
     window.location.href = `/day${day}`
   }
 
-  if (isLoading) {
-    return <LoaderSimple />
-  }
 
   return (
     <div className="h-screen overflow-hidden">
@@ -316,16 +291,50 @@ const IsEqual = ({ dayNumber }) => {
           </div>
         )}
         {!isStart && !isFinish && !showCountdown && (
-          <div className="fixed inset-0 flex items-center justify-center bg-gray-700 bg-opacity-50">
-            <div className="bg-gray-300 p-8 rounded-md text-center w-1/3">
-              <h2 className="font-semibold text-3xl p-1">
-                İşlemi Doğrula Egzersizi
+          <div className="fixed inset-0 flex items-center justify-center bg-gray-700 bg-opacity-50 ">
+            <div className="bg-gray-300 p-8 rounded-md  w-4/5 h-4/5">
+              <h2 className="font-semibold text-3xl p-1 text-center">
+                Egzersiz Ayarla
               </h2>
-              <p className="pb-2">
-                Verilen işlemlerin doğru veya yanlış olduğunu kontrol edin.
-                Kontrol ederken sürenizin olduğunu unutmayın. :)
+
+              <div className=''>
+                <h3 className='text-xl '>Kategoriler</h3>
+                <div>
+              <p onClick={() => handleCategoryClick('hikaye')} className="cursor-pointer">
+                Hikaye
               </p>
-              <p>Başlamak için butona tıklayın.</p>
+              <p onClick={() => handleCategoryClick('roman')} className="cursor-pointer">
+                Roman
+              </p>
+              <p onClick={() => handleCategoryClick('makale')} className="cursor-pointer">
+                Makale
+              </p>
+              <p onClick={() => handleCategoryClick('resim')} className="cursor-pointer">
+                Resim
+              </p>
+            </div>
+            <div>
+  {selectedCategory && (
+    <ul>
+      {selectedCategory.map((item, index) => (
+        <li onClick={()=>handleText(item.name)} key={index}>{item.name}</li>
+      ))}
+    </ul>
+  )}
+</div>
+<div>
+      <label htmlFor="speed">Hızı ayarla</label>
+      <input
+        type="text"
+        name="speed"
+        onChange={(e) => {
+          handleSpeed(e.target.value); // handleSpeed fonksiyonuna değeri geçir
+        }}
+      />
+    </div>
+            </div>
+
+
               <button
                 className="bg-blue-400 text-white py-2 px-4 mt-4 rounded hover:bg-blue-300"
                 onClick={handleStart}
@@ -341,7 +350,6 @@ const IsEqual = ({ dayNumber }) => {
           </div>
         )}
       </div>
-      <FullscreenAlert onConfirm={handleConfirm} />
     </div>
   )
 }

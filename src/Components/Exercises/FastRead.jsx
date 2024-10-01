@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import ExerciseService from '../../services/ExerciseService'
 import LoaderSimple from '../LoadPage/LoaderSimple'
-import FullscreenAlert from '../LoadPage/FullscreenAlert'
+import VocabolaryServices from '../../Services/VocabolaryServices'
 
 const FastRead = ({ dayNumber }) => {
   const [isStart, setIsstart] = useState(false)
@@ -20,7 +19,6 @@ const FastRead = ({ dayNumber }) => {
   const [teaseMessage, setTeaseMessage] = useState('')
   const [elapsedTime, setElapsedTime] = useState(0)
 
-  const [isLoading, setIsLoading] = useState(true)
   const token = window.localStorage.getItem('token')
   const day = window.localStorage.getItem('day')
   const [isFirst, setIsFirst] = useState(true)
@@ -29,8 +27,26 @@ const FastRead = ({ dayNumber }) => {
       window.location.href = '/login'
     }
   }, [])
+  const vocabolaryservices = new VocabolaryServices()
 
-  const exerciseService = new ExerciseService()
+
+  useEffect(() => {
+    vocabolaryservices.getVocabolary()
+    .then((response)=>{
+       console.log(response.data)
+       setVocabolary(response.data)
+    })
+    .catch((error)=>{
+     
+    })
+   }, [])
+
+  const [vocabolary,setVocabolary] = useState({});
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedPr, setSelectedPr] = useState({"name": "", "text": "text", "speed": 0});
+
+  
+
   const [isConfirmed, setIsConfirmed] = useState(false)
 
   const handleConfirm = () => {
@@ -38,58 +54,24 @@ const FastRead = ({ dayNumber }) => {
   }
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const data = {
-          day: dayNumber,
-          token: token,
-          exerciseName: exerciseName,
-        }
-
-        const response = await exerciseService.getExerciseData(data)
-
-        if (response.status === 200) {
-          setTitle(response.data[0].title[dayNumber - 1])
-          setText(response.data[0].text[dayNumber - 1])
-          setIsLoading(false)
-        } else {
-          console.error(response.data)
-        }
-      } catch (error) {
-        console.error('İstek hatası:', error.response.data.error)
-      }
-    }
-    fetchData()
+   
   }, [])
 
   const exerciseOver = async () => {
-    try {
-      const data = {
-        token: token,
-        name: exerciseName,
-      }
-      const response = await exerciseService.setExerciseOver(data)
-      if (response.status === 200) {
-        console.log(response.data)
-      } else {
-        console.error(response.data)
-      }
-    } catch (error) {
-      console.error('İstek hatası:', error.response.data.error)
-    }
+   
   }
 
-  // metini bölme işlemini burada tanımlıyoruz çünkü apiden istek geldikten sonra yapılmasını istiyoruz
   const wordCount = text.split(' ').length
 
   const handleStart = () => {
-    setStartTime(new Date())
-    setReading(true)
-    setEndTime(null) // Reset the end time when starting a new reading session
-    setReadingSpeed(0) // Reset the reading speed when starting a new reading session
-    setTeaseMessage('')
-    setElapsedTime(0) // Reset the elapsed time
-  }
+    setStartTime(new Date());
+    setReading(true);
+    setEndTime(null); // Reset the end time when starting a new reading session
+    setReadingSpeed(0); // Reset the reading speed when starting a new reading session
+    setTeaseMessage('');
+    setElapsedTime(0); // Reset the elapsed time
+    startScreen(); // Ekranı kapatmak için isStart state'ini günceller
+};
 
   const handleStop = () => {
     const end = new Date()
@@ -139,10 +121,40 @@ const FastRead = ({ dayNumber }) => {
     window.location.href = `/day${day}`
   }
 
-  if (isLoading) {
-    return <LoaderSimple />
-  }
+  const handleCategoryClick = (category) => {
+    // vocabolary dizisindeki sadece "hikaye" kategorisinde olanları filtreler
+    const filteredVocabolary = vocabolary.filter(item => item.category === category);
+  
+    if (filteredVocabolary.length > 0) {
+      setSelectedCategory(filteredVocabolary); // Kategori güncellenir
+      console.log(filteredVocabolary)
 
+    } else {
+      console.log("Hikaye kategorisinde bir sonuç bulunamadı.");
+    }
+  };
+
+  const handleSpeed = (speed) => {
+    console.log(speed);
+    setSelectedPr((prev) => ({
+        ...prev, // Önceki durumu koru
+        speed: speed
+    }));
+}
+ 
+const handleText = (name) => {
+    console.log(name)
+      const filteredVocabolary = vocabolary.find(item => item.name === name); // find ile ilk bulduğu elemanı alıyoruz
+      if (filteredVocabolary) {
+        setText(filteredVocabolary.text)
+          setSelectedPr({
+              name: filteredVocabolary.name,
+              text: filteredVocabolary.text,
+              speed: selectedPr.speed // Mevcut hızı koruyun
+          });
+      }
+  }
+  
   return (
     <div>
       <header className="w-full flex justify-center items-center p-4 bg-blue-300">
@@ -192,24 +204,60 @@ const FastRead = ({ dayNumber }) => {
         </footer>
       </div>
       {!isStart && (
-        <div className="fixed inset-0 flex items-center justify-center bg-gray-700 bg-opacity-50">
-          <div className="bg-gray-300 p-8 rounded-md text-center w-1/3">
-            <h2 className="font-semibold text-2xl p-1">Hızlı Okuma Testi</h2>
-            <p className="pb-2">
-              Ekranda metin verilmiştir okumaya başla butonuna basarak okumaya
-              başlayabilirsiniz. Metni okumayı bitirdiğinizde okumayı bitirdim
-              butonuna basarak okuma hızınızı gözlemleyebilirsiniz.
-            </p>
-            <button
-              className="bg-blue-400 text-white py-2 px-4 mt-4 rounded hover:bg-blue-300"
-              onClick={startScreen}
-            >
-              Devam
-            </button>
-          </div>
-        </div>
+            <div className="fixed inset-0 flex items-center justify-center bg-gray-700 bg-opacity-50 ">
+              <div className="bg-gray-300 p-8 rounded-md  w-4/5 h-4/5">
+                <h2 className="font-semibold text-3xl p-1 text-center">
+                  Egzersiz Ayarla
+                </h2>
+  
+                <div className=''>
+                  <h3 className='text-xl '>Kategoriler</h3>
+                  <div>
+                <p onClick={() => handleCategoryClick('hikaye')} className="cursor-pointer">
+                  Hikaye
+                </p>
+                <p onClick={() => handleCategoryClick('roman')} className="cursor-pointer">
+                  Roman
+                </p>
+                <p onClick={() => handleCategoryClick('makale')} className="cursor-pointer">
+                  Makale
+                </p>
+                <p onClick={() => handleCategoryClick('resim')} className="cursor-pointer">
+                  Resim
+                </p>
+              </div>
+              <div>
+    {selectedCategory && (
+      <ul>
+        {selectedCategory.map((item, index) => (
+          <li onClick={()=>handleText(item.name)} key={index}>{item.name}</li>
+        ))}
+      </ul>
+    )}
+  </div>
+  <div>
+        <label htmlFor="speed">Hızı ayarla</label>
+        <input
+          type="text"
+          name="speed"
+          onChange={(e) => {
+            handleSpeed(e.target.value); // handleSpeed fonksiyonuna değeri geçir
+          }}
+        />
+      </div>
+              </div>
+  
+  
+              <button
+  className="bg-blue-400 text-white py-2 px-4 mt-4 rounded hover:bg-blue-300"
+  onClick={handleStart} // handleStart fonksiyonu ekranı kapatacak
+>
+  Devam
+</button>
+
+              </div>
+            </div>
       )}
-      <FullscreenAlert onConfirm={handleConfirm} />
     </div>
   )
 }
