@@ -30,7 +30,7 @@ export default function Videos() {
       formData.append('video', file)
 
       axios
-        .post('http://localhost:5000/teacher/addvideo', formData, {
+        .post('https://api.gelistrio.com/teacher/addvideo', formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
             'token':token
